@@ -1,0 +1,28 @@
+VCCAUX = 3.3;
+
+NET "clk" LOC = "L15" | PERIOD = 100 MHz;
+
+NET "reset" LOC = "F5" | IOSTANDARD = LVCMOS33;
+NET "up"    LOC = "N4" | IOSTANDARD = LVCMOS33;
+NET "down"  LOC = "P3" | IOSTANDARD = LVCMOS33;
+
+NET "speed"  LOC = "A10" | IOSTANDARD = LVCMOS33;
+
+NET "TMDS(0)"      LOC = "D8" | IOSTANDARD = TMDS_33 ; # Blue
+NET "TMDSB(0)"  LOC = "C8" | IOSTANDARD = TMDS_33 ;
+NET "TMDS(1)"      LOC = "C7" | IOSTANDARD = TMDS_33 ; # Red
+NET "TMDSB(1)"  LOC = "A7" | IOSTANDARD = TMDS_33 ;
+NET "TMDS(2)"      LOC = "B8" | IOSTANDARD = TMDS_33 ; # Green
+NET "TMDSB(2)"  LOC = "A8" | IOSTANDARD = TMDS_33 ;
+NET "TMDS(3)"      LOC = "B6" | IOSTANDARD = TMDS_33 ; # Clock
+NET "TMDSB(3)"  LOC = "A6" | IOSTANDARD = TMDS_33 ;
+
+## onBoard SWITCHES taken from https://github.com/mczerski/orpsoc-de0_nano/blob/master/boards/xilinx/atlys/backend/par/bin/atlys.ucf
+##NET "gpio0_io(8)"  LOC = "A10" | IOSTANDARD=LVCMOS33; # Bank = 0, Pin name = IO_L37N_GCLK12,      	Sch name = SW0
+##NET "gpio0_io(9)"  LOC = "D14" | IOSTANDARD=LVCMOS33; # Bank = 0, Pin name = IO_L65P_SCP3,      	Sch name = SW1
+##NET "gpio0_io(10)" LOC = "C14" | IOSTANDARD=LVCMOS33; # Bank = 0, Pin name = IO_L65N_SCP2,      	Sch name = SW2
+##NET "gpio0_io(11)" LOC = "P15" | IOSTANDARD=LVCMOS33; # Bank = 1, Pin name = IO_L74P_AWAKE_1,       Sch name = SW3
+#NET "gpio0_io<12>" LOC = "P12" | IOSTANDARD=LVCMOS33; # Bank = 2, Pin name = IO_L13N_D10,      		Sch name = SW4
+#NET "gpio0_io<13>" LOC = "R5"  | IOSTANDARD=LVCMOS33; # Bank = 2, Pin name = IO_L48P_D7,      		Sch name = SW5
+#NET "gpio0_io<14>" LOC = "T5"  | IOSTANDARD=LVCMOS33; # Bank = 2, Pin name = IO_L48N_RDWR_B_VREF_2, Sch name = SW6
+#NET "gpio0_io<15>" LOC = "E4"  | IOSTANDARD=LVCMOS33; # Bank = 3, Pin name = IO_L54P_M3RESET,       Sch name = SW7
