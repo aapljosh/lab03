@@ -123,18 +123,6 @@ begin
 	end process;
 
 	------------------------------------------------------------
-	-- Clock divider - creates pixel clock from 100MHz clock
-    inst_DCM_shift: DCM
-    generic map(
-		CLKFX_MULTIPLY => 1,
-		CLKFX_DIVIDE   => 100000,
-		CLK_FEEDBACK   => "1X"
-		)
-    port map(
-		clkin => clk,
-		rst   => reset,
-		clkfx => shift_clk --1KHz
-		);
 	
     -- Clock divider - creates pixel clock from 100MHz clock
     inst_DCM_pixel: DCM
@@ -182,7 +170,7 @@ begin
 		reset => reset,
 		blank => blank,
 		ascii_to_write	=> SW7&SW6&SW5&SW4&SW3&SW2&SW1&SW0,--part B
-		write_en => '1',--button push here
+		write_en => db_pulse,--button push here
 		row => std_logic_vector(row),
 		column => std_logic_vector(column), 
 	   r => red,

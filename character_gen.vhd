@@ -71,20 +71,18 @@ architecture nielsen of character_gen is
 	signal data_out_a, data_out_b : std_logic_vector(7 downto 0);
 	signal address : std_logic_vector(10 downto 0);
 	signal data : std_logic_vector(7 downto 0);
-	signal address_b_calc_long : std_logic_vector(13 downto 0);
 	signal address_b_calc : std_logic_vector(11 downto 0);
 	signal internal_count : std_logic_vector(11 downto 0);
 	
 begin
 	
 	address <= data_out_b(6 downto 0) & dff_row(0)(3 downto 0);
-												--divide by 16									divide by 8
+												                   --divide by 16								 divide by 8
 	address_b_calc <= std_logic_vector(resize((unsigned(row(10 downto 4))*80 + unsigned(column(10 downto 3))),12));
-	--address_b_calc <= address_b_calc_long(11 downto 0);
-	
-	internal_count <= (others => '0') when reset = '1' or unsigned(internal_count) = 2400 else
-							std_logic_vector(unsigned(internal_count) + 1) when write_en = '1' else
-							internal_count;
+--	
+--	internal_count <= (others => '0') when reset = '1' or unsigned(internal_count) = 2400 else
+--							std_logic_vector(unsigned(internal_count) + 1) when write_en = '1' else
+--							internal_count;
 	
 	process (clk)	
 	begin	
@@ -113,26 +111,25 @@ begin
 	port map(
 		clk => clk,
 		we => write_en,
-		address_a => "000000000001",--  : in std_logic_vector(11 downto 0); -- write address, primary port
+		address_a => internal_count,--  : in std_logic_vector(11 downto 0); -- write address, primary port
 		address_b => address_b_calc, --: in std_logic_vector(11 downto 0); -- dual read address
 		data_in => ascii_to_write,--   : in std_logic_vector(7 downto 0);  -- data input
 		data_out_a => data_out_a,--: out std_logic_vector(7 downto 0); -- primary data output
 		data_out_b => data_out_b--: out std_logic_vector(7 downto 0)  -- dual output port
 	);
 	
---	process (clk, write_en) is
---	begin
---		if rising_edge(clk) then
---			if (reset = '1') then
---				internal_count <= (others => '0');
---			elsif (write_en = '1') then
---				internal_count <= std_logic_vector(unsigned(internal_count) + 1);
---			elsif (unsigned(internal_count) = 2400) then
---				internal_count <= (others => '0');
---			end if;
---			else
---		end if;
---	end process;
+	process (clk, write_en) is
+	begin
+		if rising_edge(clk) then
+			if (reset = '1') then
+				internal_count <= (others => '0');
+			elsif (write_en = '1') then
+				internal_count <= std_logic_vector(unsigned(internal_count) + 1);
+			elsif (unsigned(internal_count) = 2400) then
+				internal_count <= (others => '0');
+			end if;
+		end if;
+	end process;
 	
 	r	<=	data(7) & "0000000" when dff_column_one(1)(2 downto 0) = "000" else-- fix zeros
 			data(6) & "0000000" when dff_column_one(1)(2 downto 0) = "001" else	
