@@ -28,7 +28,9 @@ entity atlys_lab_font_controller is
       clk   : in  std_logic; -- 100 MHz
       reset : in  std_logic;
 		count : in  std_logic;
+		data	: in	std_logic;
 		SW0,SW1,SW2,SW3,SW4,SW5,SW6,SW7 : in std_logic;
+		nes_clk, latch	: out std_logic;		
       tmds  : out std_logic_vector(3 downto 0);
       tmdsb : out std_logic_vector(3 downto 0)
 	);
@@ -51,6 +53,7 @@ architecture nielsen of atlys_lab_font_controller is
 	
 	signal h_sync_sig, v_sync_sig, v_completed_sig, blank_sig : std_logic;
 	
+	signal a, b, sel, start, up, down, left, right : std_logic;
 	 
 	component vga_sync
        port ( 
@@ -74,10 +77,22 @@ architecture nielsen of atlys_lab_font_controller is
          column         : in std_logic_vector(10 downto 0);
          ascii_to_write : in std_logic_vector(7 downto 0);
          write_en       : in std_logic;
+			up,down,left,right: in std_logic;
          r,g,b          : out std_logic_vector(7 downto 0)
 		);
    end component;
 	
+	component nes_controller
+		port (
+			reset : in std_logic;
+         clk : in std_logic;
+         data : in std_logic;
+         nes_clk : out std_logic;
+         latch : out std_logic;
+         a, b, sel, start, up, down, left, right : out std_logic
+		);
+	end component;
+	 
 	component input_to_pulse
 		port (
 			clk		: in std_logic;
@@ -170,9 +185,13 @@ begin
 		reset => reset,
 		blank => blank,
 		ascii_to_write	=> SW7&SW6&SW5&SW4&SW3&SW2&SW1&SW0,--part B
-		write_en => db_pulse,--button push here
+		write_en => '1',--button push here
 		row => std_logic_vector(row),
-		column => std_logic_vector(column), 
+		column => std_logic_vector(column),
+		up => up,
+		down => down,
+		left => left,
+		right => right,
 	   r => red,
 	   g => green,
 	   b => blue
@@ -186,6 +205,22 @@ begin
 		output => db_pulse
 	);
 	
+	nes_controller_top: nes_controller
+	port map(
+		reset => reset,
+		clk => clk,
+		data => data,
+		nes_clk => nes_clk,
+		latch => latch,
+		a => a,
+		b => b,
+		sel => sel,
+		start => start,
+		up => up,
+		down => down,
+		left => left,
+		right => right
+	);
 	
     -- Convert VGA signals to HDMI (actually, DVID ... but close enough)
     inst_dvid: entity work.dvid

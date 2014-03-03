@@ -31,14 +31,15 @@ use UNISIM.VComponents.all;
 
 entity character_gen is
    port (
-		clk            : in std_logic;
-		reset				: in std_logic;
-      blank          : in std_logic;
-      row            : in std_logic_vector(10 downto 0);
-      column         : in std_logic_vector(10 downto 0);
-      ascii_to_write : in std_logic_vector(7 downto 0);
-      write_en       : in std_logic;
-      r,g,b          : out std_logic_vector(7 downto 0)
+		clk            	: in std_logic;
+		reset					: in std_logic;
+      blank          	: in std_logic;
+      row            	: in std_logic_vector(10 downto 0);
+      column         	: in std_logic_vector(10 downto 0);
+      ascii_to_write 	: in std_logic_vector(7 downto 0);
+      write_en       	: in std_logic;
+		up,down,left,right: in std_logic;
+      r,g,b          	: out std_logic_vector(7 downto 0)
 	);
 end character_gen;
 
@@ -74,15 +75,34 @@ architecture nielsen of character_gen is
 	signal address_b_calc : std_logic_vector(11 downto 0);
 	signal internal_count : std_logic_vector(11 downto 0);
 	
+	signal count: integer := 0;
+	constant speed: integer := 5000;
+	
+	signal internal_character: std_logic_vector(7 downto 0);
+	
+	signal internal_en: std_logic;
+	
+	
+
 begin
+
+	process (clk)	
+	begin	
+		if(rising_edge(clk)) then
+			if count <= speed then
+				count <= count + 1;
+			else
+				count <= 0;
+			end if;
+		end if;
+	end process;
 	
 	address <= data_out_b(6 downto 0) & dff_row(0)(3 downto 0);
 												                   --divide by 16								 divide by 8
 	address_b_calc <= std_logic_vector(resize((unsigned(row(10 downto 4))*80 + unsigned(column(10 downto 3))),12));
---	
---	internal_count <= (others => '0') when reset = '1' or unsigned(internal_count) = 2400 else
---							std_logic_vector(unsigned(internal_count) + 1) when write_en = '1' else
---							internal_count;
+	
+	internal_en <= '1' when up = '1' or down = '1' else
+						'0';
 	
 	process (clk)	
 	begin	
@@ -110,23 +130,40 @@ begin
 	char_screen_buffer_top: char_screen_buffer
 	port map(
 		clk => clk,
-		we => write_en,
+		we => internal_en,
 		address_a => internal_count,--  : in std_logic_vector(11 downto 0); -- write address, primary port
 		address_b => address_b_calc, --: in std_logic_vector(11 downto 0); -- dual read address
-		data_in => ascii_to_write,--   : in std_logic_vector(7 downto 0);  -- data input
+		data_in => internal_character,--   : in std_logic_vector(7 downto 0);  -- data input
 		data_out_a => data_out_a,--: out std_logic_vector(7 downto 0); -- primary data output
 		data_out_b => data_out_b--: out std_logic_vector(7 downto 0)  -- dual output port
 	);
 	
-	process (clk, write_en) is
+	process (clk, left, right) is
 	begin
 		if rising_edge(clk) then
 			if (reset = '1') then
 				internal_count <= (others => '0');
-			elsif (write_en = '1') then
+			elsif (right = '1' and count = speed) then
 				internal_count <= std_logic_vector(unsigned(internal_count) + 1);
-			elsif (unsigned(internal_count) = 2400) then
-				internal_count <= (others => '0');
+			elsif (left = '1' and count = speed) then
+				if (unsigned(internal_count) < 2400) then
+					internal_count <= std_logic_vector(unsigned(internal_count) - 1);
+				else
+					internal_count <= (others => '0');
+				end if;
+			end if;
+		end if;
+	end process;
+	
+	process (clk, up, down) is
+	begin
+		if rising_edge(clk) then
+			if (reset = '1') then
+				internal_character <= "01000001";--A
+			elsif (down = '1' and count = speed) then
+				internal_character <= std_logic_vector(unsigned(internal_character) + 1);
+			elsif (up = '1' and count = speed) then
+				internal_character <= std_logic_vector(unsigned(internal_character) - 1);
 			end if;
 		end if;
 	end process;
