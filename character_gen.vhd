@@ -62,30 +62,49 @@ architecture nielsen of character_gen is
 	);
 	end component;
 	
-	signal data_out_a, data_out_b : std_logic_vector(6 downto 0);
+	signal data_out_a, data_out_b : std_logic_vector(7 downto 0);
 	signal address : std_logic_vector(10 downto 0);
 	signal data : std_logic_vector(7 downto 0);
+	signal address_b_calc_long : std_logic_vector(13 downto 0);
+	signal address_b_calc : std_logic_vector(11 downto 0);
 	
 begin
+	
+	address <= data_out_b(6 downto 0) & row(3 downto 0);
+												--divide by 16									divide by 8
+	address_b_calc_long <= std_logic_vector(unsigned(row(10 downto 4))*80 + unsigned(column(10 downto 3)));
+	address_b_calc <= address_b_calc_long(11 downto 0);
 	
 	font_rom_top: font_rom
 	port map(
 		clk => clk,
-		addr => "00000000000",
-		data => "00000000"
+		addr => address,
+		data => data
 	);
 	
 	char_screen_buffer_top: char_screen_buffer
 	port map(
 		clk => clk,
 		we => write_en,
-		address_a => "00000000000",--  : in std_logic_vector(11 downto 0); -- write address, primary port
-		address_b => "00000000000", --: in std_logic_vector(11 downto 0); -- dual read address
-		data_in => "00000000",--   : in std_logic_vector(7 downto 0);  -- data input
-		data_out_a => "00000000",--: out std_logic_vector(7 downto 0); -- primary data output
-		data_out_b => "00000000"--: out std_logic_vector(7 downto 0)  -- dual output port
+		address_a => "000000000000",--  : in std_logic_vector(11 downto 0); -- write address, primary port
+		address_b => address_b_calc, --: in std_logic_vector(11 downto 0); -- dual read address
+		data_in => ascii_to_write,--   : in std_logic_vector(7 downto 0);  -- data input
+		data_out_a => data_out_a,--: out std_logic_vector(7 downto 0); -- primary data output
+		data_out_b => data_out_b--: out std_logic_vector(7 downto 0)  -- dual output port
 	);
 	
+	r	<=	data(7) & "0000000" when column(2 downto 0) = "000" else-- fix zeros
+			data(6) & "0000000" when column(2 downto 0) = "001" else	
+			data(5) & "0000000" when column(2 downto 0) = "010" else
+			data(4) & "0000000" when column(2 downto 0) = "011" else
+			data(3) & "0000000" when column(2 downto 0) = "100" else
+			data(2) & "0000000" when column(2 downto 0) = "101" else
+			data(1) & "0000000" when column(2 downto 0) = "110" else
+			data(0) & "0000000" when column(2 downto 0) = "111" else
+			(others => '0');
+	
+	g	<=	(others => '0');
+	b	<=	(others => '0');
 
 end nielsen;
 
