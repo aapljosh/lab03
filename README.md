@@ -28,14 +28,14 @@ The next interesting thing to note is how the 8-to-1 mux operates. The issue we 
 
 ```vhdl
 r	<=	data(7) & "0000000" when dff_column_one(1)(2 downto 0) = "000" else
-			data(6) & "0000000" when dff_column_one(1)(2 downto 0) = "001" else	
-			data(5) & "0000000" when dff_column_one(1)(2 downto 0) = "010" else
-			data(4) & "0000000" when dff_column_one(1)(2 downto 0) = "011" else
-			data(3) & "0000000" when dff_column_one(1)(2 downto 0) = "100" else
-			data(2) & "0000000" when dff_column_one(1)(2 downto 0) = "101" else
-			data(1) & "0000000" when dff_column_one(1)(2 downto 0) = "110" else
-			data(0) & "0000000" when dff_column_one(1)(2 downto 0) = "111" else
-			(others => '0');
+		data(6) & "0000000" when dff_column_one(1)(2 downto 0) = "001" else	
+		data(5) & "0000000" when dff_column_one(1)(2 downto 0) = "010" else
+		data(4) & "0000000" when dff_column_one(1)(2 downto 0) = "011" else
+		data(3) & "0000000" when dff_column_one(1)(2 downto 0) = "100" else
+		data(2) & "0000000" when dff_column_one(1)(2 downto 0) = "101" else
+		data(1) & "0000000" when dff_column_one(1)(2 downto 0) = "110" else
+		data(0) & "0000000" when dff_column_one(1)(2 downto 0) = "111" else
+		(others => '0');
 ```
 
 At this point simply hooking up character gen to the existing vga code produced the desire results. However, this is only because I made the mistake of sending the fast clock (100MHz) to the character_gen module instead of pixel_clk which is 4 times slower.  When I realized this and fied it everything actually stopped working and I needed to add delays to fix the off by 2 error. To fix this I needed to allow time for memory access by adding delays. I coded this as follows:
@@ -126,7 +126,8 @@ begin
 		end if;
 	end process;
 
-end Behavioral;```	
+end Behavioral;
+```	
 
 Basically, a shift register incremented every 20000 clock cycles was used. Whenever the shift register’s msb became a ‘1’, the output went to ‘1’ for one clock cycle.
 
@@ -171,14 +172,55 @@ process (clk, left, right) is
 ```	
  The overall machine looks like this:
 
-![ capture1]( /Capture1.png)
-![ capture1]( /Capture2.png)
+![capture1](/Capture1.PNG)
+![capture1](/Capture2.PNG)
 
 #Test/Debug
 - Aside from hooking up signals incorrectly, the first real problem I ran into was the fact that characters displayed perfectly without any delay circuitry. I knew something wasn’t right. Upon further examination, I realized I was sending clk (100MHz) to character_gen instead of pixel_clk (25MHz). This was making it so my latched button press acted weird so I had to add the delay circuitry and switch to using pixel_clk.
+
+```vhdl
+character_gen_top: character_gen
+	port map(
+		clk => pixel_clk,
+		...
+		
+--instead of
+
+character_gen_top: character_gen
+	port map(
+		clk => clk,
+		...
+```
+
 - The off by two manifested itself as the characters being shifted two pixels from where they should have been. I fixed this simply by adding 1 cycle delays. 
-- The next major proplem that I spent far too much time on was that my input_to_pulse module was testbenchable but not synthesizable.  I used a ‘wait 1ms statement’ which is fine for testbenches, but will not synthesize. 
+- The next major proplem that I spent far too much time on was that my input_to_pulse module was testbenchable but not synthesizable.  I used a 'wait for 1ms' statement which is fine for testbenches, but will not synthesize. 
+
+```vhdl
+process (clk)	
+begin	
+	if(rising_edge(clk)) then
+		if count <= 20000 then
+			count <= count + 1;
+		else
+			count <= 0;
+		end if;
+	end if;
+end process;
+
+shift_proc: process				
+begin	
+	if(rising_edge(clk)) and count = 20000 then
+	...
+		
+--instead of
+shift_proc: process				
+begin	
+	wait for 1ms;
+	...
+```
+
 - Other than the input_to_pulse module, everything was tested through the LCD. There were just too many signals to test any other way. As long as something is being displayed it is farily easy to see what is wrong (mostly the whole off by 2 thing). 
+
 #Conclusion
 Of the Labs we have doe=ne so far, I spent 6he elast amount of time on this one. I believe this is for several reasons. First, I think I am getting better at VHDL (Yay!). Second, I worked with a SNES controller last year and that helped me know intuitively how to work with an NES controller in this lab. Lastly, most of this lab was simply looking at the diagram and hooking up signals. The only real original work that I felt was unique was my input_to_pulse module and my implementation of the controller within character_gen. 
 
