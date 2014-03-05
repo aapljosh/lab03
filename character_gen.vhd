@@ -76,14 +76,13 @@ architecture nielsen of character_gen is
 	signal internal_count : std_logic_vector(11 downto 0);
 	
 	signal count: integer := 0;
-	constant speed: integer := 5000;
+	constant speed: integer := 4000000;
 	
 	signal internal_character: std_logic_vector(7 downto 0);
 	
 	signal internal_en: std_logic;
+	signal change_char: boolean;
 	
-	
-
 begin
 
 	process (clk)	
@@ -139,18 +138,24 @@ begin
 	);
 	
 	process (clk, left, right) is
+		--variable change_char : boolean;
 	begin
 		if rising_edge(clk) then
 			if (reset = '1') then
 				internal_count <= (others => '0');
-			elsif (right = '1' and count = speed) then
+				change_char <= false;
+			elsif (right = '1' and count = speed and change_char = true) then--
 				internal_count <= std_logic_vector(unsigned(internal_count) + 1);
-			elsif (left = '1' and count = speed) then
-				if (unsigned(internal_count) < 2400) then
+				change_char <= false;
+			elsif (left = '1' and count = speed and change_char = true) then--and change_char = true
+				if (unsigned(internal_count) <= 2399) then
 					internal_count <= std_logic_vector(unsigned(internal_count) - 1);
-				else
+				elsif(unsigned(internal_count) = 0) then
 					internal_count <= (others => '0');
 				end if;
+				change_char <= false;
+			elsif (left = '0' and right = '0') then
+				change_char <= true;
 			end if;
 		end if;
 	end process;
